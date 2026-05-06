@@ -1,6 +1,10 @@
-from http.server import BaseHTTPRequestHandler
-import json, os, requests, time, urllib.parse
+import json
+import os
+import requests
+import time
+import urllib.parse
 from datetime import datetime
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 UNUSUAL_WHALES_API_KEY = os.environ.get("UW_API_KEY", "")
 BASE_URL = "https://api.unusualwhales.com/api"
@@ -121,7 +125,7 @@ def process_strikes_data(raw_data, original_ticker):
         "timestamp": datetime.now().isoformat()
     }
 
-class handler(BaseHTTPRequestHandler):
+class RequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         global cache
         path = self.path; parsed = urllib.parse.urlparse(path)
@@ -167,8 +171,11 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
 
-if __name__ == "__main__":
-    from http.server import HTTPServer
-    server = HTTPServer(('0.0.0.0', 8000), handler)
-    print("🐳 Server: http://localhost:8000")
+def run_server():
+    port = int(os.environ.get("PORT", 8000))
+    server = HTTPServer(('0.0.0.0', port), RequestHandler)
+    print(f"🐳 Whale Server running on port {port}")
     server.serve_forever()
+
+if __name__ == "__main__":
+    run_server()
